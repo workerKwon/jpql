@@ -44,6 +44,20 @@ public class Main {
             Member singleResult2 = parameterBinding.getSingleResult();
             System.out.println("=============" + singleResult2.getUsername());
 
+            em.flush();
+            em.clear();
+
+            // 프로젝션
+            List<Team> result = em.createQuery("select m.team from Member m", Team.class).getResultList();
+            List<Address> embeddedProjection = em.createQuery("select o.address from Order o", Address.class).getResultList();
+            List<MemberDTO> scalaTypeProjection = em.createQuery("select new jpql.MemberDTO(m.username, m.age) from Member m", MemberDTO.class).getResultList();
+
+            MemberDTO memberDTO = scalaTypeProjection.get(0);
+            System.out.println("memberDTO = " + memberDTO.getUsername());
+            System.out.println("memberDTO = " + memberDTO.getAge());
+
+
+
             tx.commit();
         } catch (Exception e) {
             tx.rollback();
