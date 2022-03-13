@@ -58,6 +58,7 @@ public class Main {
             System.out.println("memberDTO = " + memberDTO.getUsername());
             System.out.println("memberDTO = " + memberDTO.getAge());
 
+            // 페이징
             List<Member> resultList2 = em.createQuery("select m from Member m order by m.age desc", Member.class)
             .setFirstResult(0).setMaxResults(10).getResultList();
 
@@ -65,6 +66,36 @@ public class Main {
             for (Member member : resultList2) {
                 System.out.println("member = " + member.toString());
             }
+
+            // 조인
+            Team team = new Team();
+            team.setName("teamA");
+            em.persist(team);
+
+            Member member = new Member();
+            member.setUsername("teamA");
+            member.setAge(11);
+            member.setTeam(team);
+            em.persist(member);
+
+            List<Member> innerJoin = em.createQuery("select m from Member m inner join m.team t", Member.class).getResultList();
+            List<Member> leftOuterJoin = em.createQuery("select m from Member m left outer join m.team t", Member.class).getResultList();
+
+            for (Member member2 : innerJoin) {
+                System.out.println("innerJoin = " + member2);
+            }
+
+            for (Member member2 : leftOuterJoin) {
+                System.out.println("leftOuterJoin = " + member2);
+            }
+
+            List<Member> crossJoin = em.createQuery("select m from Member m, Team t where m.username = t.name", Member.class).getResultList();
+
+            for (Member member2 : crossJoin) {
+                System.out.println("crossJoin = " + member2);
+            }
+
+            List<Member> filteredJoin = em.createQuery("select m from Member m left join m.team t on t.name = 'teamA'", Member.class).getResultList();
                 
             
             tx.commit();
