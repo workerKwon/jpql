@@ -82,6 +82,21 @@ public class Main {
                 System.out.println("team = " + team.getName() + ", members = " + team.getMembers().size());
             }
 
+            /**
+             * 컬렉션에 페치 조인을 할 수 없다. 그래서 페치 조인을 사용하지 않는 대신 BatchSize를 사용한다. 
+             * BatchSize를 100으로 하면 team id 를 100개 넣고 members를 조회한다. 지금은 2개 밖에 없어서 쿼리를 보면 2개가 들어감.
+             * 만약 100개가 넘어가면 그 다음 쿼리를 또 날림
+             * */ 
+            String query4 = "select t from Team t";
+            List<Team> resultList4 = em.createQuery(query4, Team.class)
+                                    .setFirstResult(0)
+                                    .setMaxResults(2)
+                                    .getResultList();
+
+            for (Team team : resultList4) {
+                System.out.println("team = " + team.getName() + ", members = " + team.getMembers().size());
+            }
+
             tx.commit();
         } catch (Exception e) {
             tx.rollback();
