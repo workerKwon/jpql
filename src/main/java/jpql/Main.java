@@ -25,79 +25,63 @@ public class Main {
 
         try {
 
-            for (int i = 0; i < 100; i++) {
-                Member member = new Member();
-                member.setUsername("member" + i);
-                member.setAge(i);
-                em.persist(member);
-            }
-        
-            // 반환 타입이 명확할 때 TypedQuery, 명확하지 않을 때 Query
-            TypedQuery<Member> query1 =  em.createQuery("select m from Member m", Member.class);
-            Query query2 =  em.createQuery("select m.username, m.age from Member m");
+            Team teamA = new Team();
+            teamA.setName("팀A");
+            em.persist(teamA);
 
-            // 결과가 컬렉션일 때는 getResultList(), 결과가 하나일 때는 getSingleResult()
-            List<Member> resultList = query1.getResultList(); // 결과가 없어도 빈 리스트를 반환하기 때문에 널포인트익셉션을 걱정할 필요 없다.
-            // Member singleResult = query1.getSingleResult(); // 결과가 무조건 하나여야 한다.
+            Team teamB = new Team();
+            teamB.setName("팀B");
+            em.persist(teamB);
 
-            // 동적 쿼리 파라미터 바인딩
-            TypedQuery<Member> parameterBinding =  em.createQuery("select m from Member m where m.username = :username", Member.class);
-            parameterBinding.setParameter("username", "memberA");
-            // Member singleResult2 = parameterBinding.getSingleResult(); // 무조건 하나만 가져와야함.
-            // System.out.println("=============" + singleResult2.getUsername());
+            Member member1 = new Member();
+            member1.setUsername("회원1");
+            member1.setTeam(teamA);
+            em.persist(member1);
+
+            Member member2 = new Member();
+            member2.setUsername("회원2");
+            member2.setTeam(teamA);
+            em.persist(member2);
+
+            Member member3 = new Member();
+            member3.setUsername("회원3");
+            member3.setTeam(teamB);
+            em.persist(member3);
 
             em.flush();
             em.clear();
 
-            // 프로젝션
-            List<Team> result = em.createQuery("select m.team from Member m", Team.class).getResultList();
-            List<Address> embeddedProjection = em.createQuery("select o.address from Order o", Address.class).getResultList();
-            List<MemberDTO> scalaTypeProjection = em.createQuery("select new jpql.MemberDTO(m.username, m.age) from Member m", MemberDTO.class).getResultList();
+            String query = "select m from Member m";
+            List<Member> resultList = em.createQuery(query, Member.class).getResultList();
 
-            MemberDTO memberDTO = scalaTypeProjection.get(0);
-            System.out.println("memberDTO = " + memberDTO.getUsername());
-            System.out.println("memberDTO = " + memberDTO.getAge());
-
-            // 페이징
-            List<Member> resultList2 = em.createQuery("select m from Member m order by m.age desc", Member.class)
-            .setFirstResult(0).setMaxResults(10).getResultList();
-
-            System.out.println("result size = " + resultList2.size());
-            for (Member member : resultList2) {
-                System.out.println("member = " + member.toString());
+            for (Member member : resultList) {
+                System.out.println("member = " + member.getUsername() + ", " + member.getTeam().getName());
+                // 회원1, 팀A(SQL)
+                // 회원2, 팀A(1차 캐시)
+                // 회원3, 팀B(SQL)
             }
 
-            // 조인
-            Team team = new Team();
-            team.setName("teamA");
-            em.persist(team);
+            String query1 = "select m from Member m join fetch m.team"; // fetch join 사용 즉시로딩처럼 한방에 다 가져와놓고 실제 엔티티를 사용(프록시 사용 안함.)
+            List<Member> resultList1 = em.createQuery(query1, Member.class).getResultList();
 
-            Member member = new Member();
-            member.setUsername("teamA");
-            member.setAge(11);
-            member.setTeam(team);
-            em.persist(member);
-
-            List<Member> innerJoin = em.createQuery("select m from Member m inner join m.team t", Member.class).getResultList();
-            List<Member> leftOuterJoin = em.createQuery("select m from Member m left outer join m.team t", Member.class).getResultList();
-
-            for (Member member2 : innerJoin) {
-                System.out.println("innerJoin = " + member2);
+            for (Member member : resultList1) {
+                System.out.println("member = " + member.getUsername() + ", " + member.getTeam().getName());
             }
 
-            for (Member member2 : leftOuterJoin) {
-                System.out.println("leftOuterJoin = " + member2);
+            String query2 = "select t from Team t join fetch t.members"; // fetch join 사용 즉시로딩처럼 한방에 다 가져와놓고 실제 엔티티를 사용(프록시 사용 안함.)
+            List<Team> resultList2 = em.createQuery(query2, Team.class).getResultList();
+
+            for (Team team : resultList2) {
+                System.out.println("team = " + team.getName() + ", members = " + team.getMembers().size());
             }
 
-            List<Member> crossJoin = em.createQuery("select m from Member m, Team t where m.username = t.name", Member.class).getResultList();
+            String query3 = "select distinct t from Team t join fetch t.members"; // distinct : db 데이터 중복 제거 + 같은 식벽자를 가진 엔티티 중복 제거
+            List<Team> resultList3 = em.createQuery(query3, Team.class).getResultList();
 
-            for (Member member2 : crossJoin) {
-                System.out.println("crossJoin = " + member2);
+            for (Team team : resultList3) {
+                System.out.println("team = " + team.getName() + ", members = " + team.getMembers().size());
             }
 
-            List<Member> filteredJoin = em.createQuery("select m from Member m left join m.team t on t.name = 'teamA'", Member.class).getResultList();
-                
-            
             tx.commit();
         } catch (Exception e) {
             tx.rollback();
