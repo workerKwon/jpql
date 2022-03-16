@@ -6,10 +6,15 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQuery;
 
 import net.bytebuddy.agent.builder.AgentBuilder.LambdaInstrumentationStrategy;
 
 @Entity
+@NamedQuery(
+    name = "Member.findByUsername",
+    query = "select m from Member m where m.username = :username"
+)
 public class Member {
     
     @Id @GeneratedValue

@@ -116,6 +116,12 @@ public class Main {
             for (Member member : resultList6) {
                 System.out.println("member = " + member.getUsername() + ", " + member.getTeam().getName());
             }
+
+            List<Member> resultList7 = em.createNamedQuery("Member.findByUsername", Member.class).setParameter("username", "회원1").getResultList();
+
+            for (Member member : resultList7) {
+                System.out.println("NamedQuery member = " + member);
+            }
             
             tx.commit();
         } catch (Exception e) {
