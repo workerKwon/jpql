@@ -97,6 +97,26 @@ public class Main {
                 System.out.println("team = " + team.getName() + ", members = " + team.getMembers().size());
             }
 
+
+
+            String query5 = "select m from Member m where m = :member"; // 엔티티를 직접 사용해도 쿼리는 식별자를 사용한 쿼리가 나간다.
+            List<Member> resultList5 = em.createQuery(query5, Member.class)
+                                        .setParameter("member", member1)
+                                        .getResultList();
+
+            for (Member member : resultList5) {
+                System.out.println("member = " + member.getUsername() + ", " + member.getTeam().getName());
+            }
+
+            String query6 = "select m from Member m where m.team = :team"; // 엔티티를 직접 사용해도 쿼리는 식별자를 사용한 쿼리가 나간다.
+            List<Member> resultList6 = em.createQuery(query6, Member.class)
+                                        .setParameter("team", teamA)
+                                        .getResultList();
+
+            for (Member member : resultList6) {
+                System.out.println("member = " + member.getUsername() + ", " + member.getTeam().getName());
+            }
+            
             tx.commit();
         } catch (Exception e) {
             tx.rollback();
