@@ -122,6 +122,20 @@ public class Main {
             for (Member member : resultList7) {
                 System.out.println("NamedQuery member = " + member);
             }
+
+
+            // 벌크 연산
+            // executeUpdate가 벌크 연산 : 여러 로우를 한번에 Update, Delete 할 수 있다.
+            // 영속성 컨텍스트를 무시하고 DB에 쿼리를 날리기 때문에 벌크 연산 후에 영속성 컨텍스트를 초기화해줘야 한다.
+            int executeUpdate = em.createQuery("update Member m set m.age = 20").executeUpdate(); 
+            System.out.println("excuteUpdateCount = " + executeUpdate);
+
+            System.out.println("member1.getAge() : " + member1.getAge());  // 1차 캐시에 있는 데이터를 가져오기 때문에 나이가 0으로 나온다.
+
+            em.clear();
+
+            Member findMember = em.find(Member.class, member1.getId());
+            System.out.println("findMember : " + findMember.getAge());
             
             tx.commit();
         } catch (Exception e) {
